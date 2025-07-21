@@ -46,7 +46,7 @@ app.include_router(router, prefix="/api", tags=["RAG"])
 # 添加跨域中间件
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins,###允许的前端端口地址路由
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

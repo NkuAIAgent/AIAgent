@@ -22,7 +22,7 @@ def get_all_links(page)->list:
         # # page.wait_for_selector("tr td a[href]", timeout=10000)  # 最多等10秒
     # print(page.content()[:60000])  # 打印页面前1000字符，确认里面有没有 <tr> 和 <a href=...>
     # 等待页面关键元素加载（可根据实际情况调整）
-    page.wait_for_selector("a[href]", timeout=10000)
+    page.wait_for_selector("a[href]", timeout=10000)###10秒
 
 
 
@@ -34,9 +34,9 @@ def get_all_links(page)->list:
     hrefs = []
     for el in elements:
         try:
-            href = el.get_attribute("href")
-            if href:
-                hrefs.append(href)
+            href = el.get_attribute("href")  # 尝试获取超链接
+            if href:  # 如果成功获取并且不为空
+                hrefs.append(href)  # 把链接加到列表里
         except Exception as e:
             print(f"获取链接失败：{e}")
     # 过滤匹配微信文章链接的href

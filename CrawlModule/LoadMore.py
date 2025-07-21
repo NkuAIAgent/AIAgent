@@ -13,7 +13,7 @@ def load_more(page):
         times: 点击次数，默认点击两次
         wait_ms: 每次点击后等待时间（毫秒），默认 2000ms
     """
-    for i in range(2):
+    for i in range(0):
         try:
             load_more_btn = page.locator('button:has-text("加载更多")')
             ###等待按钮可见并执行
@@ -25,4 +25,4 @@ def load_more(page):
             print(f"第 {i + 1} 次点击加载更多失败:", e)
             break
 
-    page.wait_for_timeout(30000)
+    page.wait_for_timeout(300)###0.3秒（300 毫秒）。
