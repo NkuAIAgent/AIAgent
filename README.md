@@ -1,1 +1,2 @@
-需要添加embedding_models文件夹到项目根目录下
+1.需要添加embedding_models文件夹到项目根目录下
+2.需要添加.env文件到项目根目录
