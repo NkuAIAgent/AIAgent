@@ -2,7 +2,10 @@ from playwright.sync_api import sync_playwright
 from CrawlModule.InputAndEnter import input_and_enter
 from CrawlModule.Crawl import get_all_links
 from CrawlModule.LoadMore import load_more
+from CrawlModule.UpDateTime import update_env_time, load_env_time
 from CrawlModule.WriteToJson import write_to_json
+from dotenv import load_dotenv
+import os
 
 
 def get_page_source(url,code):
@@ -27,8 +30,16 @@ def get_page_source(url,code):
             # html = page.content()
             # print(html[:20000])
             print("调用抓取模块")# 打印前2000字符看有无加载成功
-            links= get_all_links(page)
+
+            # 载入 .env 中的变量
+            #读取
+            time_str = load_env_time()
+
+            links,time= get_all_links(page,time_str)
+            print(time)
             print("抓取完成")
+
+            update_env_time(time.strftime("%Y-%m-%d %H:%M:%S"))
             ##写入json
             write_to_json(links)
         except Exception as e:
