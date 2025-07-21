@@ -1,0 +1,1 @@
+需要添加embedding_models文件夹到项目根目录下
