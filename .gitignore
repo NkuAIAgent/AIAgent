@@ -1,0 +1,4 @@
+.env
+.idea
+embedding_models/
+/embedding_models/
