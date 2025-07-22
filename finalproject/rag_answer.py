@@ -65,8 +65,20 @@ async def rag_answer_deepseek(payload: RAGQueryPayload):
     else:
         retrieved_documents_content = "没有找到相关的文档信息。\n"
 
+    # 1. 构建对话历史字符串
+    history_string = "" # 初始化一个空的字符串，用来存储最终格式化好的聊天历史
+    # 如果有聊天历史，遍历每条记录，格式化成用户和AI助手的对话形式
+    if payload.chat_history:
+        history_string += "以下是之前的对话历史：\n"
+        # 遍历聊天历史列表，格式化每条记录
+        # 每条记录是一个字典，包含角色（user 或 AI）和内容
+        for entry in payload.chat_history:
+            role = "用户" if entry["role"] == "user" else "AI助手"
+            history_string += f"{role}: {entry['content']}\n"
+        history_string += "\n"  
+
     # 2. 构建 DeepSeek-Chat 的提示
-    prompt = f"""以下是相关的文档内容（如果存在，请优先参考）：
+    prompt = f"""{history_string}以下是相关的文档内容（如果存在，请优先参考）：
                     {retrieved_documents_content}
                     
                     用户问题：{payload.user_query}
