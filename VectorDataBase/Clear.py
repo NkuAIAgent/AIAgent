@@ -5,7 +5,7 @@ def clear():
     # 要清空的目录路径
     html_out_dir = Path("../resources/html_out_dir")
     txt_out_dir = Path("../resources/txt_out_dir")
-
+    json_out_dir = Path("../resources/json_input_path")
     def clear_folder(folder: Path):
         if folder.exists() and folder.is_dir():
             for file in folder.iterdir():

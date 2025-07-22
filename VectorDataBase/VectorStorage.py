@@ -113,4 +113,6 @@ def storage():
      vectordb.persist()
      print(" 全部文档处理完成并保存。")
      clear()
+     open("../resources/json_input_path.json", "w", encoding="utf-8").close()
+
 
