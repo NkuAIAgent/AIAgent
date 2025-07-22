@@ -1,7 +1,7 @@
 import re
 import pathlib
 from bs4 import BeautifulSoup
-from utils import load_links_from_json, clean_filename, extract_page_number
+from .utils import load_links_from_json, clean_filename, extract_page_number
 
 
 class HTMLToTXTConverter:

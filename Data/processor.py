@@ -1,6 +1,6 @@
-from config import Config
-from downloader import HTMLDownloader
-from converter import HTMLToTXTConverter
+from .config import Config
+from .downloader import HTMLDownloader
+from .converter import HTMLToTXTConverter
 
 
 class WeChatArticleProcessor:

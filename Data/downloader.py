@@ -3,7 +3,7 @@ import random
 import requests
 from playwright.sync_api import sync_playwright
 from playwright.sync_api import sync_playwright
-from utils import load_links_from_json
+from .utils import load_links_from_json
 
 
 class HTMLDownloader:
