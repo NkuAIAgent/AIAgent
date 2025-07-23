@@ -100,11 +100,11 @@ def storage():
 
              metadata = {
                  "title": title,
-                ## "source": source,
+                 "source": source,
                  "pub_time": pub_time,
-                 "file_name": file.name
+                 # "file_name": file.name
              }
-             content=content+title+pub_time+file.name
+             content=content+title+pub_time+source
              doc = Document(page_content=content, metadata=metadata)
              vectordb.add_documents([doc])
              print(f"已添加文档：{file.name}")
@@ -115,4 +115,4 @@ def storage():
      clear()
      open("../resources/json_input_path.json", "w", encoding="utf-8").close()
 
-
+storage()
