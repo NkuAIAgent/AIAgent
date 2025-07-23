@@ -48,71 +48,111 @@ from langchain_core.documents import Document
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 
 from VectorDataBase.Clear import clear
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
 def storage():
-# 路径配置（相对路径）
-     embedding_model_path = r"../embedding_models/moka/m3e-base"
-     txt_dir =  r"../resources/txt_out_dir"
-     persist_dir =  r"../resources/persist_path/chroma_db"
+    # 路径配置（相对路径）
+    embedding_model_path = r"../embedding_models/moka/m3e-base"
+    txt_dir =  r"../resources/txt_out_dir"
+    persist_dir =  r"../resources/persist_path/chroma_db"
 
-     # 初始化embedding模型
-     embedding = HuggingFaceEmbeddings(model_name=str(embedding_model_path))
 
-     # 初始化Chroma向量数据库
-     vectordb = Chroma(
-         embedding_function=embedding,
-         persist_directory=str(persist_dir)
-     )
+    # 初始化embedding模型
+    embedding = HuggingFaceEmbeddings(model_name=str(embedding_model_path))
 
-     # 定义函数用于去除字段前缀
-     def clean_prefix(text: str, prefix: str) -> str:
-         if text.startswith(prefix):        # 判断 text 是否以 prefix 开头
-             return text[len(prefix):].strip()  # 去掉 prefix 后剩余部分，并去除首尾空白
-         return text.strip()                # 如果没有 prefix，直接去除空白返回
 
-     # 逐个处理txt文件
+    # 初始化Chroma向量数据库
+    vectordb = Chroma(
+        embedding_function=embedding,
+        persist_directory=str(persist_dir)
+    )
 
-     # txt_dir 是一个 Path 对象，表示某个文件夹路径；
-     #
-     # .glob("*.txt") 是 Path 提供的方法，功能是查找匹配特定模式（这里是所有以 .txt 结尾的文件）；
-     #
-     # 这个语句返回一个生成器（iterator），你用 for 循环依次取出每个符合条件的文件。
-     txt_dir = Path(txt_dir)
-     i=1
-     for file in txt_dir.glob("*.txt"):
-         with open(file, "r", encoding="utf-8") as f:
-             print(f"正在处理第{i}个文件")
-             i+=1
-             lines = [line.strip() for line in f.readlines() if line.strip()]
-             if "标题:未知标题" in lines[0]:
-                 print(f"文件 {file.name} 标题未知，跳过。")
-                 continue
-             if len(lines) < 4:
-                 print(f"文件 {file.name} 格式错误，跳过。")
-                 continue
 
-             # 去除字段前缀
-             title = clean_prefix(lines[0], "标题:")
-             content = lines[1]
-             source = clean_prefix(lines[2], "原文链接:")
-             pub_time = clean_prefix(lines[3], "发布时间:")
+    # 定义文本分割器，优先以句号切分
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500,
+        chunk_overlap=50,
+        separators=["。"]  # 这里指定以句号为优先切分符号
+    )
 
-             metadata = {
-                 "title": title,
-                 "source": source,
-                 "pub_time": pub_time,
-                 # "file_name": file.name
-             }
-             content=content+title+pub_time+source
-             doc = Document(page_content=content, metadata=metadata)
-             vectordb.add_documents([doc])
-             print(f"已添加文档：{file.name}")
 
-     # 持久化保存
-     vectordb.persist()
-     print(" 全部文档处理完成并保存。")
-     clear()
-     open("../resources/json_input_path.json", "w", encoding="utf-8").close()
+    # 定义函数用于去除字段前缀
+    def clean_prefix(text: str, prefix: str) -> str:
+        if text.startswith(prefix):        # 判断 text 是否以 prefix 开头
+            return text[len(prefix):].strip()  # 去掉 prefix 后剩余部分，并去除首尾空白
+        return text.strip()                # 如果没有 prefix，直接去除空白返回
+
+
+    # 逐个处理txt文件
+
+
+    # txt_dir 是一个 Path 对象，表示某个文件夹路径；
+    #
+    # .glob("*.txt") 是 Path 提供的方法，功能是查找匹配特定模式（这里是所有以 .txt 结尾的文件）；
+    #
+    # 这个语句返回一个生成器（iterator），你用 for 循环依次取出每个符合条件的文件。
+    txt_dir = Path(txt_dir)
+    i=1
+    for file in txt_dir.glob("*.txt"):
+        with open(file, "r", encoding="utf-8") as f:
+            print(f"正在处理第{i}个文件")
+            i+=1
+            lines = [line.strip() for line in f.readlines() if line.strip()]
+            if "标题:未知标题" in lines[0]:
+                print(f"文件 {file.name} 标题未知，跳过。")
+                continue
+            if len(lines) < 4:
+                print(f"文件 {file.name} 格式错误，跳过。")
+                continue
+
+
+            # 去除字段前缀
+            title = clean_prefix(lines[0], "标题:")
+            content = lines[1]
+            source = clean_prefix(lines[2], "原文链接:")
+            pub_time = clean_prefix(lines[3], "发布时间:")
+
+
+            metadata = {
+                "title": title,
+                "source": source,
+                "pub_time": pub_time,
+                # "file_name": file.name
+            }
+
+
+            # 合并文本和metadata（方便生成full_text做完整上下文切分）
+            full_text = content + title + pub_time + source
+
+
+            # ====== 修改部分： 使用分割器切分文本 ======
+            split_texts = text_splitter.split_text(full_text)
+           
+            # 把每个切分块与metadata合并成 Document，且将metadata内容加到page_content里
+            documents = []
+            for chunk in split_texts:
+                combined_content = "{} {} {} {}".format(
+                    chunk,
+                    title,
+                    source,
+                    pub_time
+                ).strip()
+                documents.append(Document(page_content=combined_content, metadata=metadata))
+            vectordb.add_documents(documents)
+            # ==============================
+            #  content=content+title+pub_time+source
+            #  doc = Document(page_content=content, metadata=metadata)
+            #  vectordb.add_documents([doc])
+            #  print(f"已添加文档：{file.name}")
+
+
+    # 持久化保存
+    vectordb.persist()
+    print(" 全部文档处理完成并保存。")
+    clear()
+    open("../resources/json_input_path.json", "w", encoding="utf-8").close()
+
 
 storage()
+
