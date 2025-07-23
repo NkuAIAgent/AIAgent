@@ -2,3 +2,4 @@
 .idea
 embedding_models/
 /embedding_models/
+/resources/persist_path/chroma_db/

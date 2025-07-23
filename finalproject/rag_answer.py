@@ -2,9 +2,14 @@ from fastapi import HTTPException, APIRouter
 from models import RAGQueryPayload
 from llm_services import call_llm
 import vectordb_services
+from CrawlModule._init_ import crawl
 from typing import List, Dict, Any
 
 router = APIRouter()
+
+@router.post("/tryCrawl/")
+async def try_crawl():
+    crawl()
 @router.post("/rag_answer_deepseek/")
 async def rag_answer_deepseek(payload: RAGQueryPayload):
     print(
