@@ -91,12 +91,20 @@ async def rag_answer_deepseek(payload: RAGQueryPayload):
     # payload.llm_model
     # 是前端传来的模型名，支持灵活切换模型。
     # await 表示该函数是异步函数，等待模型调用完成
-    llm_answer = await call_llm(payload.llm_model, prompt)
+    async def event_stream():
+        yield f"event: user_query\ndata: {payload.user_query}\n\n"
+        # 再流式发送 LLM 内容
+        yield f"event: temp\ndata: start to call_llm\n\n"
+        llm_res = call_llm(payload.llm_model)
+        try:
+            async for raw_chunk in await llm_res(prompt):
+                chunk = raw_chunk
+                escaped_chunk = chunk.replace("\n", "\\n").replace("\r", "\\r")
+                yield f"event: answer\ndata: {escaped_chunk}\n\n"
+        except Exception as e:
+            print(str(e))
+            yield f"event: error\ndata: Streaming error: {str(e)}\n\n"
+        yield f"event: temp\ndata: ending\n\n"
 
-    return {
-        "status": "success",
-        # "user_query": payload.user_query,
-        "answer": llm_answer,
-        # "retrieved_documents": retrieved_docs_for_frontend,
-        # "retrieved_metadatas": retrieved_metadatas_for_frontend
-    }
+    from fastapi.responses import StreamingResponse
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
